@@ -15,64 +15,65 @@ def discriminator(image, reuse=False):
     if (reuse):
         tf.get_variable_scope().reuse_variables()
 
-    weights1 = tf.get_variable('weights1', [5, 5, 1, 32], initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais1 = tf.get_variable('bais1', [32], initializer=tf.constant_initializer(0))
-    layer1 = tf.nn.conv2d(input=image, filter=d_w1, strides=[1, 1, 1, 1], padding='SAME')
+    weights1 = tf.get_variable('discriminator_weights1', [5, 5, 1, 32], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais1 = tf.get_variable('discriminator_bais1', [32], initializer=tf.constant_initializer(0))
+    layer1 = tf.nn.conv2d(input=image, filter=weights1, strides=[1, 1, 1, 1], padding='SAME')
     layer1 = layer1 + bais1
     layer1 = tf.nn.relu(layer1)
     layer1 = tf.nn.avg_pool(layer1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-    weights2 = tf.get_variable('weights2', [5, 5, 32, 64], initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais2 = tf.get_variable('bais2', [64], initializer=tf.constant_initializer(0))
-    layer2 = tf.nn.conv2d(input=layer, filter=weights2, strides=[1, 1, 1, 1], padding='SAME')
+    weights2 = tf.get_variable('discriminator_weights2', [5, 5, 32, 64], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais2 = tf.get_variable('discriminator_bais2', [64], initializer=tf.constant_initializer(0))
+    layer2 = tf.nn.conv2d(input=layer1, filter=weights2, strides=[1, 1, 1, 1], padding='SAME')
     layer2 = layer2 + bais2
     layer2 = tf.nn.relu(layer2)
     layer2 = tf.nn.avg_pool(layer2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-    weights3 = tf.get_variable('weights3', [7 * 7 * 64, 1024], initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais3 = tf.get_variable('bais3', [1024], initializer=tf.constant_initializer(0))
+    weights3 = tf.get_variable('discriminator_weights3', [7 * 7 * 64, 1024], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais3 = tf.get_variable('discriminator_bais3', [1024], initializer=tf.constant_initializer(0))
     layer3 = tf.reshape(layer2, [-1, 7 * 7 * 64])
     layer3 = tf.matmul(layer3, weights3)
     layer3 = layer3 + bais3
     layer3 = tf.nn.relu(layer3)
 
-    weights4 = tf.get_variable('weights4', [1024, 1], initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais4 = tf.get_variable('bais4', [1], initializer=tf.constant_initializer(0))
+    weights4 = tf.get_variable('discriminator_weights4', [1024, 1], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais4 = tf.get_variable('discriminator_bais4', [1], initializer=tf.constant_initializer(0))
 
+    layer4 = tf.matmul(layer3, weights4) + bais4
     return layer4
 
 def generator(batch_size, dimension):
     z = tf.truncated_normal([batch_size, dimension], mean=0, stddev=1, name='z')
-    weights1 = tf.get_variable('weights1', [dimension, 3136], dtype=tf.float32,
+    weights1 = tf.get_variable('generator_weights1', [dimension, 3136], dtype=tf.float32,
                                    initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais1 = tf.get_variable('bais1', [3136], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais1 = tf.get_variable('generator_bais1', [3136], initializer=tf.truncated_normal_initializer(stddev=0.02))
 
     layer1 = tf.matmul(z, weights1) + bais1
     layer1 = tf.reshape(layer1, [-1, 56, 56, 1])
     layer1 = tf.contrib.layers.batch_norm(layer1, epsilon=1e-5, scope='bn1')
     layer1 = tf.nn.relu(layer1)
 
-    weights2 = tf.get_variable('weights2', [3, 3, 1, dimension/2], dtype=tf.float32,
+    weights2 = tf.get_variable('generator_weights2', [3, 3, 1, dimension/2], dtype=tf.float32,
                            initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais2 = tf.get_variable('bais2', [dimension/2], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais2 = tf.get_variable('generator_bais2', [dimension/2], initializer=tf.truncated_normal_initializer(stddev=0.02))
     layer2 = tf.nn.conv2d(layer1, weights2, strides=[1, 2, 2, 1], padding='SAME')
     layer2 = layer2 + bais2
     layer2 = tf.contrib.layers.batch_norm(layer2, epsilon=1e-5, scope='bn2')
     layer2 = tf.nn.relu(layer2)
     layer2 = tf.image.resize_images(layer2, [56, 56])
 
-    weights3 = tf.get_variable('weights3', [3, 3, dimension/2, dimension/4], dtype=tf.float32,
+    weights3 = tf.get_variable('generator_weights3', [3, 3, dimension/2, dimension/4], dtype=tf.float32,
                            initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais3 = tf.get_variable('bais3', [dimension/4], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais3 = tf.get_variable('generator_bais3', [dimension/4], initializer=tf.truncated_normal_initializer(stddev=0.02))
     layer3 = tf.nn.conv2d(layer2, weights3, strides=[1, 2, 2, 1], padding='SAME')
     layer3 = layer3 + bais3
     layer3 = tf.contrib.layers.batch_norm(layer3, epsilon=1e-5, scope='bn3')
     layer3 = tf.nn.relu(layer3)
     layer3 = tf.image.resize_images(layer3, [56, 56])
 
-    weights4 = tf.get_variable('weights4', [1, 1, dimension/4, 1], dtype=tf.float32,
+    weights4 = tf.get_variable('generator_weights4', [1, 1, dimension/4, 1], dtype=tf.float32,
                            initializer=tf.truncated_normal_initializer(stddev=0.02))
-    bais4 = tf.get_variable('bais4', [1], initializer=tf.truncated_normal_initializer(stddev=0.02))
+    bais4 = tf.get_variable('generator_bais4', [1], initializer=tf.truncated_normal_initializer(stddev=0.02))
     layer4 = tf.nn.conv2d(layer3, weights4, strides=[1, 2, 2, 1], padding='SAME')
     layer4 = layer4 + bais4
     layer4 = tf.sigmoid(layer4)
@@ -88,7 +89,7 @@ x_placeholder = tf.placeholder("float", shape = [None,28,28,1], name='x_placehol
 
 generator_z = generator(batch_size, dimensions) #Stores images
 
-discriminator_x = discriminator(x_placeholder, reuse=True) #Stores prediction probabilities for actual images
+discriminator_x = discriminator(x_placeholder) #Stores prediction probabilities for actual images
 
 discriminator_g = discriminator(generator_z,  reuse=True) #prediction probabilities for generated images
 
@@ -101,14 +102,14 @@ discriminator_loss = discriminator_loss_real + discriminator_loss_fake
 
 tvars = tf.trainable_variables()
 
-discriminator_vars = [var for var in tvars if 'd_' in var.name]
-generator_vars = [var for var in tvars if 'g_' in var.name]
+discriminator_vars = [var for var in tvars if 'discriminator_' in var.name]
+generator_vars = [var for var in tvars if 'generator_' in var.name]
 
-with tf.variable_scope(tf.get_variable_scope(), reuse=False) as scope:
+with tf.variable_scope(tf.get_variable_scope(), reuse=tf.AUTO_REUSE) as scope:
     discriminator_trainer_fake = tf.train.AdamOptimizer(0.0001).minimize(discriminator_loss_fake,
                                                                          var_list=discriminator_vars)
     discriminator_trainer_real = tf.train.AdamOptimizer(0.0001).minimize(discriminator_loss_real, var_list=discriminator_vars)
-    generator_trainer = tf.train.AdamOptimizer(0.0001).minimize(generator_loss, var_list=genenrator_vars)
+    generator_trainer = tf.train.AdamOptimizer(0.0001).minimize(generator_loss, var_list=generator_vars)
 
 tf.summary.scalar('Generator_loss', generator_loss)
 tf.summary.scalar('Discriminator_loss_real', discriminator_loss_real)
@@ -132,13 +133,13 @@ images_for_tensorboard = generator(batch_size, dimensions)
 tf.summary.image('Generated_images', images_for_tensorboard, 10)
 merged = tf.summary.merge_all()
 logdir = "tensorboard/gan/"
-writer = tf.summary.FileWriter(logdir, sess.graph)
+writer = tf.summary.FileWriter(logdir, session.graph)
 print(logdir)
 
 
 saver = tf.train.Saver()
 
-sess.run(tf.global_variables_initializer())
+session.run(tf.global_variables_initializer())
 
 generator_Loss = 0
 discriminatorLossFake, discriminatorLossReal = 1, 1
