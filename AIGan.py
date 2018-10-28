@@ -141,33 +141,35 @@ saver = tf.train.Saver()
 
 session.run(tf.global_variables_initializer())
 
-generator_Loss = 0
-discriminatorLossFake, discriminatorLossReal = 1, 1
+generatorLoss = 0
+discriminatorLossReal, discriminatorLossFake = 1, 1
 discriminator_real_count, discriminator_fake_count, generator_count = 0, 0, 0
 
 for i in range(50000):
     real_image_batch = mnist.train.next_batch(batch_size)[0].reshape([batch_size, 28, 28, 1])
-    if dLossFake > 0.6:
-        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = sess.run([discriminator_trainer_fake,
+
+    if discriminatorLossFake > 0.6:
+        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = session.run([discriminator_trainer_fake,
                                                                                    discriminator_loss_real,
                                                                                    discriminator_loss_fake,
                                                                                    generator_loss],
-                                                                                   {x_placeholder: real_image_batch})
+                                                                                   {x_placeholder:
+                                                                                        real_image_batch})
         discriminator_fake_count += 1
 
-    if gLoss > 0.5:
+    if generatorLoss > 0.5:
         # Train the generator
-        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = sess.run([generator_trainer,
+        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = session.run([generator_trainer,
                                                                                    discriminator_loss_real,
                                                                                    discriminator_loss_fake,
                                                                                    generator_loss],
                                                                                    {x_placeholder: real_image_batch})
         generator_count += 1
 
-    if dLossReal > 0.45:
+    if discriminatorLossReal > 0.45:
         # If the discriminator classifies real images as fake,
         # train discriminator on real values
-        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = sess.run([discriminator_trainer_real,
+        _, discriminatorLossReal, discriminatorLossFake, generatorLoss = session.run([discriminator_trainer_real,
                                                                                    discriminator_loss_real,
                                                                                    discriminator_loss_fake,
                                                                                    generator_loss],
@@ -176,41 +178,41 @@ for i in range(50000):
 
     if i % 10 == 0:
         real_image_batch = mnist.validation.next_batch(batch_size)[0].reshape([batch_size, 28, 28, 1])
-        summary = sess.run(merged, {x_placeholder: real_image_batch, discriminator_real_count_ph: discriminator_real_count,
+        summary = session.run(merged, {x_placeholder: real_image_batch, discriminator_real_count_ph: discriminator_real_count,
                                                                                         discriminator_fake_count_ph:discriminator_fake_count,
                                                                                         generator_count_ph: generator_count})
         writer.add_summary(summary, i)
         discriminator_real_count, discriminator_fake_count, generator_count = 0, 0, 0
 
     if i % 1000 == 0:
-        images = sess.run(generator(3, dimensions))
-        discriminator_result = sess.run(discriminator(x_placeholder), {x_placeholder: images})
+        images = session.run(generator(3, dimensions))
+        discriminator_result = session.run(discriminator(x_placeholder), {x_placeholder: images})
         print("TRAINING STEP", i, "AT", datetime.datetime.now())
         for j in range(3):
             print("Discriminator classification",
             discriminator_result[j])
             im = images[j, :, :, 0]
-            plt.imshow(im.reshape([28, 28]), cmap='Greys')
-            plt.show()
+            #plt.imshow(im.reshape([28, 28]), cmap='Greys')
+            #plt.show()
 
     if i % 5000 == 0:
-        save_path = saver.save(sess, "models/pretrained_gan.ckpt", global_step=i)
+        save_path = saver.save(session, "models/pretrained_gan.ckpt", global_step=i)
         print("saved to %s" % save_path)
 
-test_images = sess.run(generator(10, 100))
-test_eval = sess.run(discriminator(x_placeholder), {x_placeholder: test_images})
+test_images = session.run(generator(10, 100))
+test_eval = session.run(discriminator(x_placeholder), {x_placeholder: test_images})
 
 real_images = mnist.validation.next_batch(10)[0].reshape([10, 28, 28, 1])
-real_eval = sess.run(discriminator(x_placeholder), {x_placeholder: real_images})
+real_eval = session.run(discriminator(x_placeholder), {x_placeholder: real_images})
 
 
 for i in range(10):
     print(test_eval[i])
-    plt.imshow(test_images[i, :, :, 0], cmap='Greys')
-    plt.show()
+    #plt.imshow(test_images[i, :, :, 0], cmap='Greys')
+    #plt.show()
 
 for i in range(10):
     print(real_eval[i])
-    plt.imshow(real_images[i, :, :, 0], cmap='Greys')
-    plt.show()
+    #plt.imshow(real_images[i, :, :, 0], cmap='Greys')
+    #plt.show()
 
