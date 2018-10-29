@@ -145,7 +145,7 @@ generatorLoss = 0
 discriminatorLossReal, discriminatorLossFake = 1, 1
 discriminator_real_count, discriminator_fake_count, generator_count = 0, 0, 0
 
-for i in range(1):
+for i in range(50000):
     real_image_batch = mnist.train.next_batch(batch_size)[0].reshape([batch_size, 28, 28, 1])
 
     if discriminatorLossFake > 0.6:
