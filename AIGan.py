@@ -145,7 +145,7 @@ generatorLoss = 0
 discriminatorLossReal, discriminatorLossFake = 1, 1
 discriminator_real_count, discriminator_fake_count, generator_count = 0, 0, 0
 
-for i in range(50000):
+for i in range(1):
     real_image_batch = mnist.train.next_batch(batch_size)[0].reshape([batch_size, 28, 28, 1])
 
     if discriminatorLossFake > 0.6:
@@ -208,11 +208,11 @@ real_eval = session.run(discriminator(x_placeholder), {x_placeholder: real_image
 
 for i in range(10):
     print(test_eval[i])
-    #plt.imshow(test_images[i, :, :, 0], cmap='Greys')
+    plt.imsave('generated_images' + str(i) + '.png', test_images[i, :, :, 0], cmap='Greys')
     #plt.show()
 
 for i in range(10):
     print(real_eval[i])
-    #plt.imshow(real_images[i, :, :, 0], cmap='Greys')
+    plt.imsave('real_images' + str(i) + '.png', test_images[i, :, :, 0],cmap='Greys')
     #plt.show()
 
