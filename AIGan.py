@@ -145,7 +145,7 @@ generatorLoss = 0
 discriminatorLossReal, discriminatorLossFake = 1, 1
 discriminator_real_count, discriminator_fake_count, generator_count = 0, 0, 0
 
-for i in range(50000):
+for i in range(100000):
     real_image_batch = mnist.train.next_batch(batch_size)[0].reshape([batch_size, 28, 28, 1])
 
     if discriminatorLossFake > 0.6:
@@ -192,7 +192,7 @@ for i in range(50000):
             print("Discriminator classification",
             discriminator_result[j])
             im = images[j, :, :, 0]
-            #plt.imshow(im.reshape([28, 28]), cmap='Greys')
+            plt.imsave('imageAt' + str(i) +  '.png', im.reshape([28, 28]), cmap='Greys')
             #plt.show()
 
     if i % 5000 == 0:
